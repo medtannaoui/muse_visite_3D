@@ -251,6 +251,56 @@ class MouvementRebond extends Composant {
     }
 }
 
+// question 3
+class Steering extends Composant {
+    constructor(params, acteur) {
+        super(params, acteur);
+        this.devenirRecurrent();
+
+        // Cible unique ou liste de points
+        this.cibles = [];
+        if (Array.isArray(params.points)) {
+            this.cibles = params.points.map(p => new THREE.Vector3(p.x, p.y || 0, p.z));
+        } else if (params.point) {
+            this.cibles = [new THREE.Vector3(params.point.x, params.point.y || 0, params.point.z)];
+        }
+
+        // Vitesse de déplacement
+        this.vitesse = params.vitesse || 0.05;
+        // Distance de tolérance pour s’arrêter
+        this.tolerance = params.tolerance || 0.2;
+        // Index de la cible actuelle
+        this.courante = 0;
+    }
+
+    executer() {
+        if (this.cibles.length === 0) return;
+
+        const obj = this.acteur.objet3d;
+        if (!obj) return;
+
+        const cible = this.cibles[this.courante];
+        const position = obj.position;
+        const direction = new THREE.Vector3().subVectors(cible, position);
+        const distance = direction.length();
+
+        if (distance > this.tolerance) {
+            // Normalise et déplace
+            direction.normalize();
+            position.addScaledVector(direction, this.vitesse);
+            // Oriente le modèle vers sa direction de déplacement
+            obj.rotation.y = Math.atan2(direction.x, direction.z);
+        } else {
+            // Passe à la cible suivante
+            this.courante++;
+            if (this.courante >= this.cibles.length) {
+                // A atteint le dernier point → stop
+                this.courante = this.cibles.length - 1;
+            }
+        }
+    }
+}
+
 
 const COMPS = {
     
@@ -266,6 +316,7 @@ const COMPS = {
     sol          : Sol,
     obj          : Obj,
     comp         : Composant,
+    steering : Steering,
     mouvementRebond : MouvementRebond
 } ; 
 

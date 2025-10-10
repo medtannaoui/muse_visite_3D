@@ -13,6 +13,16 @@ class Monde {
         this.scene = simu.scene ;
         this.assets = {} ; 
     }
+    genererPointsAleatoires(nbPoints = 5) {
+    const points = [];
+    for (let i = 0; i < nbPoints; i++) {
+        points.push({
+            x: (Math.random() - 0.5) * 18, // dans le musée
+            z: (Math.random() - 0.5) * 18
+        });
+    }
+    return points;
+    }
 
     genese(){
 
@@ -95,7 +105,7 @@ class Monde {
 
         // Tableau sur le mur Est
         this.simu.creerActeur("posterEst", ACTEURS.acteur, {})
-            .ajouterComposant(COMPS.poster, { image: "./assets/images/2.JPG" })
+            .ajouterComposant(COMPS.poster, { largeur:3,longueur:3,image: "./assets/images/2.JPG" })
             .ajouterComposant(COMPS.rotation, { y: -Math.PI / 2 })
             .ajouterComposant(COMPS.position, { x: 9.9, y: 2.5, z: 0 });
 
@@ -112,6 +122,7 @@ class Monde {
 
         for (let i = 0; i < 10; i++) {
             const tuxName = "tux" + (i + 1);
+            const points = this.genererPointsAleatoires(6); // 6 points par pingouin
 
             this.simu.creerActeur(tuxName, ACTEURS.newton, { masse: 10 })
                 .ajouterComposant(COMPS.obj, {
@@ -119,18 +130,19 @@ class Monde {
                     obj: "penguin.obj",
                     mtl: "penguin.mtl"
                 })
-                // position initiale aléatoire
+                // première position = premier point du parcours
                 .ajouterComposant(COMPS.position, {
-                    x: (Math.random() - 0.5) * 18,
-                    z: (Math.random() - 0.5) * 18
+                    x: points[0].x,
+                    y: 0.5,
+                    z: points[0].z
                 })
-                // rotation aléatoire initiale
-                .ajouterComposant(COMPS.rotation, {
-                    y: Math.random() * Math.PI * 2
-                })
-                // déplacement rectiligne avec rebond sur les murs
-                .ajouterComposant(COMPS.mouvementRebond, {});
+                .ajouterComposant(COMPS.steering, {
+                    points: points,
+                    vitesse: 0.05 + Math.random() * 0.02, // vitesse légèrement différente
+                    tolerance: 0.3
+                });
         }
+
 
 
 
