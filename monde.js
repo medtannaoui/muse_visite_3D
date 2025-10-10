@@ -128,15 +128,15 @@ class Monde {
         // --- Mur Nord ---
         const zPosNord = -9.9;              // position fixe du mur Nord
         const xDebutNord = -murLongueur / 2;
-        for (let i = 0; i < nbPosters; i++) {
+        for (let i = 0; i < 2; i++) {
             const name = `posterNord${i}`;
-            const x = xDebutNord + (i + 1) * espacement;
+            const x = xDebutNord + (i + 1) * espacement*2;
 
             this.simu.creerActeur(name, ACTEURS.acteur, {})
                 .ajouterComposant(COMPS.poster, {
                     largeur: 3,
-                    hauteur: 2,
-                    image: `./assets/images/${i + 1}.JPG`
+                    hauteur: 3,
+                    image: `./assets/images/MAN00${i + 1}.jpg`
                 })
                 // rotation pour que les tableaux regardent vers le centre du musée
                 .ajouterComposant(COMPS.rotation, { y: 0 })
@@ -154,7 +154,7 @@ class Monde {
                 .ajouterComposant(COMPS.poster, {
                     largeur: 3,
                     hauteur: 2,
-                    image: `./assets/images/${i + 1}.JPG`
+                    image: `./assets/images/tableau${i + 1}.jpg`
                 })
                 // ✅ rotation vers le centre du musée (sens inverse du mur Est)
                 .ajouterComposant(COMPS.rotation, { y: Math.PI / 2 })
