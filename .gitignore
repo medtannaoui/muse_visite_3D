@@ -1,0 +1,40 @@
+# Fichiers temporaires
+*.log
+*.tmp
+*.bak
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Fichiers de dépendances locales (si utilisés)
+node_modules/
+
+# Dossiers de build ou de cache
+assets/
+enonce/
+dist/
+build/
+.cache/
+.vscode/
+
+# Fichiers Python (si jamais tu testes des scripts)
+__pycache__/
+*.pyc
+
+# Fichiers générés
+*.zip
+*.tar
+*.gz
+
+# Données temporaires ou personnelles
+*.swp
+*.swo
+
+# Sauvegardes d’éditeurs
+*~
+*.old
+
+# Dossier des textures ou modèles volumineux si non nécessaires sur GitHub
+assets/textures/
+assets/obj/
