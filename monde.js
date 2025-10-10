@@ -112,21 +112,24 @@ class Monde {
 
         for (let i = 0; i < 10; i++) {
             const tuxName = "tux" + (i + 1);
-            const tux = this.simu.creerActeur(tuxName, ACTEURS.newton, { masse: 10 })
+
+            this.simu.creerActeur(tuxName, ACTEURS.newton, { masse: 10 })
                 .ajouterComposant(COMPS.obj, {
                     repertoire: "./assets/obj/pingouin/",
                     obj: "penguin.obj",
                     mtl: "penguin.mtl"
                 })
+                // position initiale aléatoire
                 .ajouterComposant(COMPS.position, {
-                    x: (Math.random() - 0.5) * 19,
-                    z: (Math.random() - 0.5) * 19
+                    x: (Math.random() - 0.5) * 18,
+                    z: (Math.random() - 0.5) * 18
                 })
+                // rotation aléatoire initiale
                 .ajouterComposant(COMPS.rotation, {
                     y: Math.random() * Math.PI * 2
                 })
-                //.ajouterComposant(COMPS.mouvementAleatoire, {})
-                .ajouterComposant(COMPS.regardesLaOuTuVas, {});
+                // déplacement rectiligne avec rebond sur les murs
+                .ajouterComposant(COMPS.mouvementRebond, {});
         }
 
 

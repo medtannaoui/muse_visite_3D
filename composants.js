@@ -204,9 +204,56 @@ class AttacheA extends Composant {
 
 }
 
+class MouvementRebond extends Composant {
+
+    constructor(params, acteur) {
+        super(params, acteur);
+        this.devenirRecurrent();
+
+        // Vitesse initiale aléatoire (direction)
+        this.vitesse = new THREE.Vector3(
+            (Math.random() - 0.5) * 0.1,
+            0,
+            (Math.random() - 0.5) * 0.1
+        );
+
+        // Limites du musée (20x20 m)
+        this.limite = 10;
+    }
+
+    executer() {
+        const obj = this.acteur.objet3d;
+        if (!obj) return;
+
+        // Déplacer le pingouin selon sa vitesse
+        obj.position.add(this.vitesse);
+
+        // Rebond sur les murs X
+        if (obj.position.x > this.limite) {
+            obj.position.x = this.limite;
+            this.vitesse.x *= -1;
+        } else if (obj.position.x < -this.limite) {
+            obj.position.x = -this.limite;
+            this.vitesse.x *= -1;
+        }
+
+        // Rebond sur les murs Z
+        if (obj.position.z > this.limite) {
+            obj.position.z = this.limite;
+            this.vitesse.z *= -1;
+        } else if (obj.position.z < -this.limite) {
+            obj.position.z = -this.limite;
+            this.vitesse.z *= -1;
+        }
+
+        // Ajuster la rotation pour regarder dans la direction du déplacement
+        obj.rotation.y = Math.atan2(this.vitesse.x, this.vitesse.z);
+    }
+}
 
 
 const COMPS = {
+    
     alea         : Alea,
     mouvementAleatoire : MouvementAleatoire,
     regardesLaOuTuVas : RegardesLaOuTuVas,
@@ -218,7 +265,8 @@ const COMPS = {
     cloison      : Cloison,
     sol          : Sol,
     obj          : Obj,
-    comp         : Composant
+    comp         : Composant,
+    mouvementRebond : MouvementRebond
 } ; 
 
 export {COMPS} ; 
