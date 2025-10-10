@@ -99,15 +99,67 @@ class Monde {
         //                       ajouterComposant(COMPS.attacheA,{parent:"tux"});
 
             // Tableau sur le mur Nord
-        this.simu.creerActeur("posterNord", ACTEURS.acteur, {})
-            .ajouterComposant(COMPS.poster, { image: "./assets/images/1.JPG" })
-            .ajouterComposant(COMPS.position, { x: 0, y: 2.5, z: -9.9 });
+        
+        
+        // --- Tableaux sur le mur Est ---
+        const nbPosters = 5;                // nombre de tableaux par mur
+        const murLongueur = 20;             // largeur du mur
+        const espacement = murLongueur / (nbPosters + 1);
+        const hauteurMur = 5;
+        const yPos = 2.5;
 
-        // Tableau sur le mur Est
-        this.simu.creerActeur("posterEst", ACTEURS.acteur, {})
-            .ajouterComposant(COMPS.poster, { largeur:3,longueur:3,image: "./assets/images/2.JPG" })
-            .ajouterComposant(COMPS.rotation, { y: -Math.PI / 2 })
-            .ajouterComposant(COMPS.position, { x: 9.9, y: 2.5, z: 0 });
+        // --- Mur Est ---
+        const xPosEst = 9.9;                // position fixe du mur Est
+        const zDebutEst = -murLongueur / 2; // début du mur (au fond)
+        for (let i = 0; i < nbPosters; i++) {
+            const name = `posterEst${i}`;
+            const z = zDebutEst + (i + 1) * espacement;
+
+            this.simu.creerActeur(name, ACTEURS.acteur, {})
+                .ajouterComposant(COMPS.poster, {
+                    largeur: 3,
+                    hauteur: 2,
+                    image: `./assets/images/${i + 1}.JPG`
+                })
+                .ajouterComposant(COMPS.rotation, { y: -Math.PI / 2 })
+                .ajouterComposant(COMPS.position, { x: xPosEst, y: yPos, z });
+        }
+
+        // --- Mur Nord ---
+        const zPosNord = -9.9;              // position fixe du mur Nord
+        const xDebutNord = -murLongueur / 2;
+        for (let i = 0; i < nbPosters; i++) {
+            const name = `posterNord${i}`;
+            const x = xDebutNord + (i + 1) * espacement;
+
+            this.simu.creerActeur(name, ACTEURS.acteur, {})
+                .ajouterComposant(COMPS.poster, {
+                    largeur: 3,
+                    hauteur: 2,
+                    image: `./assets/images/${i + 1}.JPG`
+                })
+                // rotation pour que les tableaux regardent vers le centre du musée
+                .ajouterComposant(COMPS.rotation, { y: 0 })
+                .ajouterComposant(COMPS.position, { x, y: yPos, z: zPosNord });
+        }
+        
+        // --- Tableaux sur le mur Ouest ---
+        const xPosOuest = -9.9;                 // position fixe du mur Ouest (à gauche)
+        const zDebutOuest = -murLongueur / 2;   // début du mur
+        for (let i = 0; i < nbPosters; i++) {
+            const name = `posterOuest${i}`;
+            const z = zDebutOuest + (i + 1) * espacement;
+
+            this.simu.creerActeur(name, ACTEURS.acteur, {})
+                .ajouterComposant(COMPS.poster, {
+                    largeur: 3,
+                    hauteur: 2,
+                    image: `./assets/images/${i + 1}.JPG`
+                })
+                // ✅ rotation vers le centre du musée (sens inverse du mur Est)
+                .ajouterComposant(COMPS.rotation, { y: Math.PI / 2 })
+                .ajouterComposant(COMPS.position, { x: xPosOuest, y: yPos, z });
+        }
 
 
     //    const poster3 = this.simu.creerActeur("poster3", ACTEURS.acteur,{}).
@@ -138,7 +190,7 @@ class Monde {
                 })
                 .ajouterComposant(COMPS.steering, {
                     points: points,
-                    vitesse: 0.05 + Math.random() * 0.02, // vitesse légèrement différente
+                    vitesse: 0.01 + Math.random() * 0.02, // vitesse légèrement différente
                     tolerance: 0.3
                 });
         }
