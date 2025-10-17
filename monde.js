@@ -58,7 +58,7 @@ class Monde {
        const sol = this.simu.creerActeur("sol", ACTEURS.acteur,{}).
                       ajouterComposant(COMPS.sol,{largeur:20,longueur:20,materiau:this.chercher("Parquet")});
         
-                // --- MURS DU MUSÉE (4 murs entourant le sol 20x20) ---
+        // --- MURS DU MUSÉE (4 murs entourant le sol 20x20) ---
         const materiauMur = this.chercher("Dante"); // matériau béton
 
         // Mur Nord (à l’arrière)
@@ -171,10 +171,41 @@ class Monde {
         //                     ajouterComposant(COMPS.position,{x:5,z:-5})
 
         this.scene.add(PRIMS3D.creerSoleil());
+ // --- Création du guide (avec changement de couleur et petit signe attaché) ---
+        const cheminGuide = [
+            {x:-6, z:-6},
+            {x:6, z:-6},
+            {x:6, z:6},
+            {x:-6, z:6},
+            {x:-6, z:-6}
+        ];
 
+        this.simu.creerActeur("guide", ACTEURS.newton, { masse: 10 })
+            .ajouterComposant(COMPS.obj, {
+                repertoire: "./assets/obj/pingouin/",
+                obj: "penguin.obj",
+                mtl: "penguin.mtl"
+            })
+            .ajouterComposant(COMPS.position, { x: cheminGuide[0].x, y: 0.5, z: cheminGuide[0].z })
+            // recolore le modèle (seulement la couleur, pas la taille)
+            .ajouterComposant(COMPS.coloriseModel, { color: 0xff4500 }) // orange vif
+            .ajouterComposant(COMPS.steering, {
+                points: cheminGuide,
+                vitesse: 0.03,
+                tolerance: 0.2
+            });
+
+        // petit signe (petite sphère) attaché au guide pour un repère visuel
+        this.simu.creerActeur("guide_hat", ACTEURS.acteur, {})
+            .ajouterComposant(COMPS.sphere, { rayon: 0.18, materiau: this.chercher("Rouge") }) // petite sphère rouge
+            .ajouterComposant(COMPS.position, { x: 0, y: 1.1, z: 0 }) // au-dessus de la tête
+            .ajouterComposant(COMPS.attacheA, { parent: "guide" }); // attaché au guide
+
+        // --- Création des boids (20) — maintenant attirés par le guide ---
         for (let i = 0; i < 10; i++) {
             const tuxName = "tux" + (i + 1);
-            const points = this.genererPointsAleatoires(6); // 6 points par pingouin
+            const x0 = (Math.random() - 0.5) * 18;
+            const z0 = (Math.random() - 0.5) * 18;
 
             this.simu.creerActeur(tuxName, ACTEURS.newton, { masse: 10 })
                 .ajouterComposant(COMPS.obj, {
@@ -182,24 +213,122 @@ class Monde {
                     obj: "penguin.obj",
                     mtl: "penguin.mtl"
                 })
-                // première position = premier point du parcours
                 .ajouterComposant(COMPS.position, {
-                    x: points[0].x,
-                    y: 0.5,
-                    z: points[0].z
+                    x: x0,
+                    y: 0,
+                    z: z0
                 })
-                .ajouterComposant(COMPS.steering, {
-                    points: points,
-                    vitesse: 0.01 + Math.random() * 0.02, // vitesse légèrement différente
-                    tolerance: 0.3
+                .ajouterComposant(COMPS.boids, {
+                    neighborRadius: 3.0,
+                    separationDist: 0.8,
+                    maxSpeed: 0.08,
+                    maxForce: 0.02,
+                    weightSeparation: 1.6,
+                    weightAlignment: 1.0,
+                    weightCohesion: 0.9,
+                    limite: 9.8,
+                    leader: "guide",       // <-- le nom du guide
+                    leaderWeight: 1.2      // <-- influence du guide (ajuste au besoin)
+                })
+                // optionnel : conserver le comportement d'éloignement vis-à-vis de la caméra
+                .ajouterComposant(COMPS.eloigneUtilisateur, {
+                    seuil: 2.5,
+                    vitesse: 0.12,
+                    limite: 9.8,
+                    oriente: true
                 });
         }
+        // Extrait à insérer dans genese() après la création de la caméra / au démarrage de la simulation :
 
+            // initialiser le mode par défaut
+            this.simu.cameraControlMode = this.simu.cameraControlMode || 'mouse';
 
+            // créer l'acteur camBoid (contrôle de la caméra en mode boid)
+            this.simu.creerActeur("camBoidActor", ACTEURS.acteur, {})
+                .ajouterComposant(COMPS.cameraBoid, {
+                    camera: this.simu.camera,           // si ta simu expose la camera
+                    targetActorName: "guide",          // optionnel : suivi du guide
+                    maxSpeed: 0.06,
+                    maxForce: 0.03,
+                    targetWeight: 1.0,
+                    inputWeight: 0.9
+                });
 
+            // bascule clavier : B pour basculer entre 'mouse' et 'boid'
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'b' || e.key === 'B') {
+                    this.simu.cameraControlMode = (this.simu.cameraControlMode === 'boid') ? 'mouse' : 'boid';
+                    // si tu utilises OrbitControls et que tu as stocké controls dans this.simu.controls
+                    if (this.simu.controls) {
+                        this.simu.controls.enabled = (this.simu.cameraControlMode === 'mouse');
+                    }
+                    console.log("Camera control mode:", this.simu.cameraControlMode);
+                }
+            });
 
     }
+//     for (let i = 0; i < 20; i++) {
+//         const tuxName = "tux" + (i + 1);
+//         const points = this.genererPointsAleatoires(6); // 6 points par pingouin
+//         const x0 = points[0].x, z0 = points[0].z;
+//         this.simu.creerActeur(tuxName, ACTEURS.newton, { masse: 10 })
+//             .ajouterComposant(COMPS.obj, {
+//                 repertoire: "./assets/obj/pingouin/",
+//                 obj: "penguin.obj",
+//                 mtl: "penguin.mtl"
+//             })
+//             .ajouterComposant(COMPS.position, {
+//                 x: x0,
+//                 y: 0,
+//                 z: z0
+//             })
+//             // .ajouterComposant(COMPS.steering, {
+//             //     points: points,
+//             //     vitesse: 0.01 + Math.random() * 0.02,
+//             //     tolerance: 0.3
+//             // })
+//             // // Ajout du comportement d'éloignement vis-à-vis de la caméra
+//             // .ajouterComposant(COMPS.eloigneUtilisateur, {
+//             //     seuil: 3.0,      // si la caméra est à moins de 3m, reculer
+//             //     vitesse: 0.12,   // pas de recul par tick
+//             //     limite: 10.0,    // limite du musée (cohérent avec tes murs)
+//             //     oriente: true    // orienter le pingouin dans la direction de recul
+//             //     // camera: this.simu.camera // optionnel si simu.camera n'existe pas
+//             // });
+//             .ajouterComposant(COMPS.boids, {
+//             neighborRadius: 3.0,
+//             separationDist: 0.8,
+//             maxSpeed: 0.08,
+//             maxForce: 0.02,
+//             weightSeparation: 1.6,
+//             weightAlignment: 1.0,
+//             weightCohesion: 0.9,
+//             limite: 9.8
+//         });
+// }
 
+//         // Exemple : un pingouin-guide qui suit des points (Question 6)
+//         const cheminGuide = [
+//             {x:-6, z:-6},
+//             {x:6, z:-6},
+//             {x:6, z:6},
+//             {x:-6, z:6},
+//             {x:-6, z:-6}
+//         ];
+//         this.simu.creerActeur("guide", ACTEURS.newton, { masse: 10 })
+//             .ajouterComposant(COMPS.obj, {
+//                 repertoire: "./assets/obj/pingouin/",
+//                 obj: "penguin.obj",
+//                 mtl: "penguin.mtl"
+//             })
+//             .ajouterComposant(COMPS.position, {x: cheminGuide[0].x, y: 0.5, z: cheminGuide[0].z})
+//             .ajouterComposant(COMPS.steering, {
+//                 points: cheminGuide,
+//                 vitesse: 0.03,
+//                 tolerance: 0.2
+//             });
+
+    
     enregistrer(nom,v){this.assets[nom]=v;}
     chercher(nom,defaut){return (this.assets[nom] || (defaut || null));} 
 }
